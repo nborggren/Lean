@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.EndTimeLocal,
                 mapFileResolver,
                 _factorFileProvider,
-                _tradableDaysProvider(request),
+                _tradableDaysProvider(request).GetEnumerator(),
                 _isLiveMode,
                  _zipDataCacheProvider
                 );

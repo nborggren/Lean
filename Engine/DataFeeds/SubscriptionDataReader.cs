@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime periodFinish,
             MapFileResolver mapFileResolver,
             IFactorFileProvider factorFileProvider,
-            IEnumerable<DateTime> tradeableDates,
+            IEnumerator<DateTime> tradeableDates,
             bool isLiveMode,
             IDataCacheProvider dataCacheProvider)
         {
@@ -158,7 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             //Save access to securities
             _isLiveMode = isLiveMode;
-            _tradeableDates = tradeableDates.GetEnumerator();
+            _tradeableDates = tradeableDates;
         }
 
         /// <summary>

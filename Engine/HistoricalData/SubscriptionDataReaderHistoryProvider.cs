@@ -115,12 +115,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 config.MappedSymbol = mapFile.GetMappedSymbol(start, config.MappedSymbol);
             }
 
+            var tradeableDatesEnumerator = Time.EachTradeableDay(request.ExchangeHours, start, end).GetEnumerator();
+
             var dataReader = new SubscriptionDataReader(config,
                 start,
                 end,
                 mapFileResolver,
                 _factorFileProvider,
-                Time.EachTradeableDay(request.ExchangeHours, start, end),
+                tradeableDatesEnumerator,
                 false,
                 _dataCacheProvider
                 );
@@ -131,14 +133,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
             dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
 
-            var reader = CorporateEventEnumeratorFactory.CreateEnumerators(
+            var reader = AddCorporateEventEnumerator(
                 dataReader,
                 config,
-                _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                false,
-                start);
+                start,
+                request,
+                tradeableDatesEnumerator);
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
@@ -170,19 +172,25 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
-            return CreateSubscription(subscriptionRequest, reader, request);
+            if (_parallelHistoryRequestsEnabled)
+            {
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
+            }
+            return SubscriptionUtils.Create(subscriptionRequest, reader);
         }
 
         /// <summary>
-        /// Creates a new Subscription for a given SubscriptionRequest, data enumerator and HistoryRequest
+        /// Adds the corporate event enumerator to the stack, in charge of split, dividends, mappings and price scaling
         /// </summary>
-        protected virtual Subscription CreateSubscription(SubscriptionRequest subscriptionRequest, IEnumerator<BaseData> enumerator, HistoryRequest request)
+        protected virtual IEnumerator<BaseData> AddCorporateEventEnumerator(IEnumerator<BaseData> rawData,
+            SubscriptionDataConfig config,
+            ITradableDatesNotifier tradableDatesNotifier,
+            MapFileResolver mapFileResolver,
+            DateTime start,
+            HistoryRequest request,
+            IEnumerator<DateTime> tradeableDatesEnumerator)
         {
-            if (_parallelHistoryRequestsEnabled)
-            {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, enumerator);
-            }
-            return SubscriptionUtils.Create(subscriptionRequest, enumerator);
+            return CorporateEventEnumeratorFactory.CreateEnumerators(rawData, config, _factorFileProvider, tradableDatesNotifier, mapFileResolver, false, start);
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>

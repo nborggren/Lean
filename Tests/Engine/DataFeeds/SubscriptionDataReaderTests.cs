@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 end,
                 mapFileResolver,
                 new LocalDiskFactorFileProvider(mapFileProvider),
-                LinqExtensions.Range(start, end, time => time + TimeSpan.FromDays(1)),
+                LinqExtensions.Range(start, end, time => time + TimeSpan.FromDays(1)).GetEnumerator(),
                 false,
                 new TestDataCacheProvider
                 { Data = data }
