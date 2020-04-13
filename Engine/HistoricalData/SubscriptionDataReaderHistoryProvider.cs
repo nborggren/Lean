@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Creates a subscription to process the request
         /// </summary>
-        private Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
+        protected virtual Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
         {
             // data reader expects these values in local times
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
@@ -170,11 +170,19 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
+            return CreateSubscription(subscriptionRequest, reader, request);
+        }
+
+        /// <summary>
+        /// Creates a new Subscription for a given SubscriptionRequest, data enumerator and HistoryRequest
+        /// </summary>
+        protected virtual Subscription CreateSubscription(SubscriptionRequest subscriptionRequest, IEnumerator<BaseData> enumerator, HistoryRequest request)
+        {
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, enumerator);
             }
-            return SubscriptionUtils.Create(subscriptionRequest, reader);
+            return SubscriptionUtils.Create(subscriptionRequest, enumerator);
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>
