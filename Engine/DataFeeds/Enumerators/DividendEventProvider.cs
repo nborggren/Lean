@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -74,6 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         _priceFactorRatio.Value
                     );
                     // let the config know about it for normalization
+                    Log.Trace($"_config.SumOfDividends {_config.SumOfDividends}");
                     _config.SumOfDividends += baseData.Distribution;
                     _priceFactorRatio = null;
 

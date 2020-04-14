@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -95,6 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     _lastTradableDate = Current.Time.Date;
                     UpdateScaleFactor(_lastTradableDate);
+                    Log.Trace($"{_lastTradableDate} Updating scale {_config.PriceScaleFactor}");
                 }
 
                 var securityType = Current.Symbol.SecurityType;
